@@ -24,8 +24,9 @@ class POMDP:
         self.gamma_reward = {}
         for a in self.actions:
             v = numpy.zeros(len(self.states))
-            for s in self.states:
-                v[s] = self.reward_function(s, a)
+            for idx in range(len(self.states)):
+                s = self.states[idx]
+                v[idx] = self.reward_function(s, a)
             self.gamma_reward[a] = v
 
     def compute_gamma_action_obs(self, a, o):
@@ -38,10 +39,13 @@ class POMDP:
         gamma_action_obs = []
         for alpha in self.alpha_vecs:
             v = numpy.zeros(len(self.states)) # initialize the update vector
-            for s in self.states:
-                for s_prime in self.states:
-                    v[s] += self.transition_function(s, a, s_prime)*self.observation_function(o, s_prime)*alpha[s_prime]
-                v[s] *= self.gamma # discount
+            for sidx in range(len(self.states)):
+                s = self.states[sidx]
+                
+                for s_prime_idx in range(len(self.states)):
+                    s_prime = self.states[s_prime_idx]
+                    v[sidx] += self.transition_function(s, a, s_prime)*self.observation_function(o, s_prime)*alpha[s_prime_idx]
+                v[sidx] *= self.gamma # discount
             gamma_action_obs.append(v)
         return gamma_action_obs
 
@@ -62,3 +66,14 @@ class POMDP:
         max_vals = numpy.max(vals, axis=0)
         plt.plot(belief_points[:,0], max_vals, 'k', linewidth=2)
         plt.show()
+
+    def get_action(self, belief):
+        vals = numpy.zeros(len(self.actions))
+        for aidx in range(len(self.actions)):
+            vals[aidx] = numpy.dot(self.alpha_vecs[aidx], belief)
+        print vals
+        aidx = numpy.argmax(vals)
+        action = self.actions[aidx]
+        
+        print 'Returning action: ', action
+        return action
